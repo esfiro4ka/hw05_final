@@ -212,7 +212,9 @@ class PostsPagesTests(TestCase):
         response_3 = self.authorized_client.get(reverse('posts:follow_index'))
         self.assertEqual(len(response_3.context['page_obj']),
                          len_by_authorized_client + 1)
-        response_4 = self.authorized_client_2.get(reverse('posts:follow_index'))
+        response_4 = self.authorized_client_2.get(
+            reverse('posts:follow_index')
+        )
         self.assertEqual(len(response_4.context['page_obj']),
                          len_by_authorized_client_2)
 

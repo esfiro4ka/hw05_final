@@ -33,8 +33,10 @@ class PostsURLTests(TestCase):
             '/follow/': 'posts/follow.html',
         }
         cls.FOLLOW_URLS = {
-            f'/profile/{cls.author}/follow/': f'/auth/login/?next=/profile/{cls.author}/follow/',
-            f'/profile/{cls.author}/unfollow/': f'/auth/login/?next=/profile/{cls.author}/unfollow/',
+            f'/profile/{cls.author}/follow/':
+            f'/auth/login/?next=/profile/{cls.author}/follow/',
+            f'/profile/{cls.author}/unfollow/':
+            f'/auth/login/?next=/profile/{cls.author}/unfollow/',
         }
 
     def setUp(self):
