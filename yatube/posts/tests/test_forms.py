@@ -79,7 +79,7 @@ class PostFormTests(TestCase):
         self.assertEqual(Post.objects.count(), posts_count + 1)
         self.assertTrue(
             Post.objects.filter(
-                text='Тестовый пост',
+                text=form_data['text'],
                 group=PostFormTests.group.id,
                 image='posts/small.gif'
             ).exists()
@@ -103,7 +103,7 @@ class PostFormTests(TestCase):
         self.assertEqual(Post.objects.count(), posts_count)
         self.assertTrue(
             Post.objects.filter(
-                text='Тестовый пост изменился',
+                text=form_data['text'],
                 group=PostFormTests.group.id,
                 id=response.context['post'].id
             ).exists()
@@ -133,6 +133,6 @@ class PostFormTests(TestCase):
         self.assertEqual(Comment.objects.count(), comment_count + 1)
         self.assertTrue(
             Comment.objects.filter(
-                text='Тестовый комментарий'
+                text=form_data['text']
             ).exists()
         )

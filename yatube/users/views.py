@@ -2,7 +2,7 @@ from django.core.mail import send_mail
 from django.urls import reverse_lazy
 from django.views.generic import CreateView
 
-from .forms import CreationForm
+from users.forms import CreationForm
 
 
 class SignUp(CreateView):

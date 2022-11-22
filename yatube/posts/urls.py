@@ -1,6 +1,7 @@
 from django.urls import path
 
-from . import views
+from posts import views
+
 
 app_name = 'posts'
 

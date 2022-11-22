@@ -55,8 +55,14 @@ class PostsPagesTests(TestCase):
             group=cls.group_2,
             text='Тестовый пост 2',
         )
+        cls.follow = Follow.objects.create(
+            user=cls.author,
+            author=cls.user
+        )
+        cls.INDEX_REVERSE = reverse('posts:index')
+        cls.FOLLOW_REVERSE = reverse('posts:follow_index')
         cls.PUBLIC_URLS = {
-            reverse('posts:index'): 'posts/index.html',
+            cls.INDEX_REVERSE: 'posts/index.html',
             reverse(
                 'posts:group_list', kwargs={'slug': 'test-slug'}
             ): 'posts/group_list.html',
@@ -72,6 +78,7 @@ class PostsPagesTests(TestCase):
                 'posts:post_edit', kwargs={'post_id': cls.post.id}
             ): 'posts/post_create.html',
             reverse('posts:post_create'): 'posts/post_create.html',
+            cls.FOLLOW_REVERSE: 'posts/follow.html'
         }
 
     @classmethod
@@ -165,21 +172,31 @@ class PostsPagesTests(TestCase):
         self.assertEqual(first_object.id, PostsPagesTests.post.id)
 
     def test_private_pages_show_correct_context(self):
-        """Шаблоны edit и create сформированы с правильным контекстом."""
+        """Шаблоны приватных страниц сформированы с правильным контекстом."""
         for address in self.PRIVATE_URLS.keys():
             with self.subTest(address=address):
                 response = self.author_client.get(address)
-                self.assertIn('form', response.context.keys())
-                self.assertIsInstance(response.context.get('form'), PostForm)
+                if 'form' in response.context.keys():
+                    self.assertIn('form', response.context.keys())
+                    self.assertIsInstance(response.context.get('form'),
+                                          PostForm)
+                else:
+                    self.assertEqual(response.context['page_obj'][0].text,
+                                     PostsPagesTests.post_2.text)
+                    self.assertEqual(response.context['page_obj'][0].author,
+                                     PostsPagesTests.post_2.author)
+                    self.assertEqual(
+                        response.context['page_obj'][0].group.title,
+                        PostsPagesTests.group_2.title)
 
     def test_index_cache(self):
         """Тесты, которые проверяют работу кеша."""
-        response_1 = self.author_client.get(reverse('posts:index'))
+        response_1 = self.author_client.get(self.INDEX_REVERSE)
         Post.objects.all().delete()
-        response_2 = self.author_client.get(reverse('posts:index'))
+        response_2 = self.author_client.get(self.INDEX_REVERSE)
         self.assertEqual(response_1.content, response_2.content)
         cache.clear()
-        response_3 = self.author_client.get(reverse('posts:index'))
+        response_3 = self.author_client.get(self.INDEX_REVERSE)
         self.assertNotEqual(response_2.content, response_3.content)
 
     def test_404_page_uses_correct_template(self):
@@ -188,9 +205,6 @@ class PostsPagesTests(TestCase):
         self.assertTemplateUsed(response, 'core/404.html')
 
     def test_follow_page_uses_template_and_work(self):
-        """Страница follow использует правильный шаблон."""
-        response = self.authorized_client.get(reverse('posts:follow_index'))
-        self.assertTemplateUsed(response, 'posts/follow.html')
         """"Новая запись автора появляется в ленте тех, кто подписан
         и не появляется в ленте тех, кто не подписан.
         """
@@ -198,23 +212,19 @@ class PostsPagesTests(TestCase):
             user=self.user,
             author=self.author
         )
-        response_1 = self.authorized_client.get(reverse('posts:follow_index'))
+        response_1 = self.authorized_client.get(self.FOLLOW_REVERSE)
         len_by_authorized_client = len(response_1.context['page_obj'])
-        response_2 = self.authorized_client_2.get(
-            reverse('posts:follow_index')
-        )
+        response_2 = self.authorized_client_2.get(self.FOLLOW_REVERSE)
         len_by_authorized_client_2 = len(response_2.context['page_obj'])
         Post.objects.create(
             author=self.author,
             group=self.group,
             text='Тестовый пост'
         )
-        response_3 = self.authorized_client.get(reverse('posts:follow_index'))
+        response_3 = self.authorized_client.get(self.FOLLOW_REVERSE)
         self.assertEqual(len(response_3.context['page_obj']),
                          len_by_authorized_client + 1)
-        response_4 = self.authorized_client_2.get(
-            reverse('posts:follow_index')
-        )
+        response_4 = self.authorized_client_2.get(self.FOLLOW_REVERSE)
         self.assertEqual(len(response_4.context['page_obj']),
                          len_by_authorized_client_2)
 
